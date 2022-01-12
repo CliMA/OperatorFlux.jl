@@ -25,15 +25,15 @@ function ChebyshevTransform(; modes::NTuple{N, T}) where {N, T}
     return ChebyshevTransform(modes, dims)
 end
 
-function forward(tr::ChebyshevTransform{N}, x) where {N}
-    return FFTW.r2r(x, FFTW.REDFT00, tr.dims)
+function forward(tr::ChebyshevTransform{N}, x, dims = tr.dims) where {N}
+    return FFTW.r2r(x, FFTW.REDFT00, dims)
 end
 
-function inverse(tr::ChebyshevTransform{N}, x) where {N}
+function inverse(tr::ChebyshevTransform{N}, x, dims = tr.dims) where {N}
     return FFTW.r2r(
-        x ./ (prod(2 .* (size(x)[tr.dims] .- 1))),
+        x ./ (prod(2 .* (size(x)[collect(dims)] .- 1))),
         FFTW.REDFT00,
-        tr.dims,
+        dims,
     )
 end
 

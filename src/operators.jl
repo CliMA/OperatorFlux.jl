@@ -1,4 +1,4 @@
-struct SpectralConv{T, W, I, O} <: AbstractOperator
+struct SpectralConv{T, W, I, O} <: AbstractSpectralOperator
     transform::T
     weights::W
     in_channels::I
@@ -58,7 +58,96 @@ function (conv::SpectralConv)(x::AbstractArray)
     return y
 end
 
-struct SpectralKernelOperator{L, C, A} <: AbstractOperator
+struct SpectralCovariance{T, U, V, W, I, O} <: AbstractSpectralOperator
+    transform::T
+    weights_μ::U
+    weights_d::V
+    weights_w::W
+    in_channels::I
+    out_channels::O
+end
+
+"""
+    SpectralCovariance(transform, rank, channels; init = glorot_uniform)
+
+Constructs a spectral covariance operator with spectral transform `trafo`, low-rank matrix rank `rank`, channels `channels`, 
+and initialization function `init`.
+
+# Example
+```
+julia> trafo = FourierTransform(modes = (12, 3, 4, 12))
+julia> channels = 1 => 4
+julia> rank = 3
+julia> conv = SpectralCovariance(trafo, rank, channels)
+```
+"""
+function SpectralCovariance(
+    transform::T,
+    rank::R,
+    ch::Pair{S, S};
+    init = Flux.glorot_uniform,
+) where {T, R, S <: Int}
+    FT = eltype(transform)
+    in, out = ch
+    scale = one(FT) / (in * out)
+
+    # depending on the transform, we may need to initialize
+    # with real or complex numbers
+    if FT <: Complex
+        weights_μ = init(in, out) + init(in, out) * im
+        weights_d = init(in, out) + init(in, out) * im
+        weights_w = init(in, rank, out) + init(in, rank, out) * im
+    else
+        weights_μ = init(in, out)
+        weights_d = init(in, out)
+        weights_w = init(in, rank, out)
+    end
+    weights_μ = scale * weights_μ
+    weights_d = scale * weights_d
+    weights_w = scale * weights_w
+
+    return SpectralCovariance(
+        transform,
+        weights_μ,
+        weights_d,
+        weights_w,
+        in,
+        out,
+    )
+end
+
+Flux.@functor SpectralCovariance
+
+function (so::SpectralCovariance)(x::AbstractArray)
+    in_channels = so.in_channels
+    out_channels = so.out_channels
+    N_space = length(size(x)[2:(end - 1)])
+
+    # Bring input into truncated spectral representation
+    c = OperatorFlux.forward(so.transform, x)
+    ct = OperatorFlux.truncate_modes(so.transform, c)
+
+    # paramterize the mean for the low-rank approximation
+    μ = OperatorFlux.sparse_mean(so.weights_μ, c, Val(N_space))
+    μ = OperatorFlux.pad_modes(so.transform, μ, size(c)[2:(end - 1)])
+    μ = OperatorFlux.inverse(so.transform, μ)
+
+    # parameterize the diagonal matrix for the low-rank approximation
+    D = OperatorFlux.sparse_mean(so.weights_d, c, Val(N_space))
+    D = OperatorFlux.pad_modes(so.transform, D, size(c)[2:(end - 1)])
+    D = OperatorFlux.inverse(so.transform, D)
+    D = @. log(1 + exp(D)) # keeping a stable positive attitude
+
+    # parameterize the low-rank matrix for the low-rank approximation
+    rank = size(so.weights_w)[end - 1]
+    V = OperatorFlux.sparse_covariance(so.weights_w, c, Val(N_space))
+    V = OperatorFlux.pad_modes(so.transform, V, (size(c)[2:(end - 1)]..., rank))
+    V = OperatorFlux.inverse(so.transform, V)
+
+    return μ, D, V
+end
+
+struct SpectralKernelOperator{L, C, A} <: AbstractSpectralOperator
     linear::L
     conv::C
     σ::A
@@ -101,12 +190,19 @@ function (so::SpectralKernelOperator)(x)
 end
 
 # Base extensions
-Base.ndims(sc::SpectralConv) = ndims(sc.transform)
+Base.ndims(so::AbstractSpectralOperator) = ndims(so.transform)
 
-function Base.show(io::IO, sc::SpectralConv)
+function Base.show(io::IO, so::SpectralConv)
     print(
         io,
-        "SpectralConv($(sc.in_channels) => $(sc.out_channels), $(sc.transform))",
+        "SpectralConv($(so.in_channels) => $(so.out_channels), $(so.transform))",
+    )
+end
+
+function Base.show(io::IO, so::SpectralCovariance)
+    print(
+        io,
+        "SpectralConv($(so.in_channels) => $(so.out_channels), $(so.transform)))",
     )
 end
 
@@ -120,16 +216,3 @@ function Base.show(io::IO, so::SpectralKernelOperator)
         ")",
     )
 end
-
-# Utils
-tensor_contraction(
-    A,
-    B,
-    ::Val{1},
-) = @tullio C[o, a, b] := A[i, a, o] * B[i, a, b]
-tensor_contraction(A, B, ::Val{2}) =
-    @tullio C[o, a₁, a₂, b] := A[i, a₁, a₂, o] * B[i, a₁, a₂, b]
-tensor_contraction(A, B, ::Val{3}) =
-    @tullio C[o, a₁, a₂, a₃, b] := A[i, a₁, a₂, a₃, o] * B[i, a₁, a₂, a₃, b]
-tensor_contraction(A, B, ::Val{4}) = @tullio C[o, a₁, a₂, a₃, a₄, b] :=
-    A[i, a₁, a₂, a₃, a₄, o] * B[i, a₁, a₂, a₃, a₄, b]

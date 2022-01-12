@@ -11,6 +11,7 @@ export FourierTransform,
     ChebyshevTransform,
     SpectralConv,
     SpectralKernelOperator,
+    SpectralCovariance,
     forward,
     inverse,
     truncate_modes,
@@ -25,6 +26,11 @@ abstract type AbstractTransform end
     Supertype for all operators.
 """
 abstract type AbstractOperator end
+
+"""
+    Supertype for all spectral operators.
+"""
+abstract type AbstractSpectralOperator end
 
 """
     forward(trafo, x)
@@ -60,8 +66,8 @@ pad_modes(trafo::AbstractTransform, _...) =
 
 include("utils.jl")
 include("chainrules.jl")
-include("fourier.jl")
-include("chebyshev.jl")
+include("transform_fourier.jl")
+include("transform_chebyshev.jl")
 include("operators.jl")
 
 end # module
