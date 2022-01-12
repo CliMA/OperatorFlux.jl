@@ -11,18 +11,18 @@
 [![docsbuild][docs-bld-img]][docs-bld-url]
 [![dev][docs-dev-img]][docs-dev-url]
 
-[docs-bld-img]: https://github.com/bischtob/OperatorFlux.jl/workflows/Documentation/badge.svg
-[docs-bld-url]: https://github.com/bischtob/OperatorFlux.jl/actions?query=workflow%3ADocumentation
+[docs-bld-img]: https://github.com/CliMA/OperatorFlux.jl/workflows/Documentation/badge.svg
+[docs-bld-url]: https://github.com/CliMA/OperatorFlux.jl/actions?query=workflow%3ADocumentation
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-dev-url]: https://bischtob.github.io/OperatorFlux.jl/dev/
+[docs-dev-url]: https://CliMA.github.io/OperatorFlux.jl/dev/
 
 ## Installation instructions
 
 Download the `OperatorFlux`
-[source](https://github.com/bischtob/OperatorFlux.jl) with:
+[source](https://github.com/CliMA/OperatorFlux.jl) with:
 
 ```
-$ git clone https://github.com/bischtob/OperatorFlux.jl.git
+$ git clone https://github.com/CliMA/OperatorFlux.jl.git
 ```
 
 ## Contributing
