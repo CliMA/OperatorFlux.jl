@@ -15,7 +15,7 @@ function forward(tr::FourierTransform{N}, x, dims = tr.dims) where {N}
 end
 
 function inverse(tr::FourierTransform{N}, x, dims = tr.dims) where {N}
-    return real(ifft(x, dims))
+    return ifft(x, dims)
 end
 
 function truncate_modes(tr::FourierTransform{N}, c, dims = tr.dims) where {N}
