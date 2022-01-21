@@ -2,6 +2,7 @@ module OperatorFlux
 
 using Flux
 using FFTW
+using GaussQuadrature
 using Tullio
 using ChainRulesCore
 
