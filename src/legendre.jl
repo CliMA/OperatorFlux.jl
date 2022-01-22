@@ -1,6 +1,19 @@
 struct LegendreTransform{N,T,D} <: AbstractTransform
     modes::NTuple{N,T}
     dims::D
+    #grid
+    #useful stuff goes here
+end
+
+function SpectralElementTransform(; modes, dims) where {N,T}
+    # Det of Jacobian
+    # Transformation matrix along each tensor product dimension
+    jacobian_det = nothing
+    jacobian = nothing
+    trafo = legendre_transform_forward_matrix.(modes)
+    inv_trafo = legendre_transform_inverse_matrix.(modes)
+
+    SpectralElementTransform()
 end
 
 function LegendreTransform(; modes::NTuple{N,T}) where {N,T}
@@ -11,11 +24,13 @@ function LegendreTransform(; modes::NTuple{N,T}) where {N,T}
 end
 
 function forward(tr::LegendreTransform{N}, x, dims = tr.dims) where {N}
-    return fft(x, dims)
+    L = legendre_transform_forward_matrix(N)
+
+    return 
 end
 
 function inverse(tr::LegendreTransform{N}, x, dims = tr.dims) where {N}
-    return ifft(x, dims)
+    return 
 end
 
 # function truncate_modes(tr::LegendreTransform{N}, c, dims = tr.dims) where {N}
@@ -64,8 +79,46 @@ end
 # end
 
 # utils
-function vandermonde(x, α, β, N)
+function vandermonde(x, N)
+    # create view to assign values
+    P = zeros(length(x), N+1)
+    P⁰ = view(P, :, 0 + 1)
+    @. P⁰ = 1
 
+    # explicitly compute second coefficient
+    if N == 0
+        return P
+    end
+
+    P¹ = view(P, :, 1 + 1)
+    @. P¹ =  x 
+
+    if N == 1
+        return P
+    end
+
+    for n in 1:(N-1)
+        # get views for ith, i-1th, and i-2th columns
+        Pⁿ⁺¹ = view(P, :, n + 1 + 1)
+        Pⁿ = view(P, :, n + 0 + 1)
+        Pⁿ⁻¹ = view(P, :, n - 1 + 1)
+
+        # compute coefficients for ith column
+        @. Pⁿ⁺¹ = ( (2n+1) * x * Pⁿ  - n * Pⁿ⁻¹ ) / (n+1)
+    end
+
+    return P
+end
+
+function legendre_transform_inverse_matrix(N)
+    # get the legendre points to construct transformation
+    # matrix. For small transforms this is performant.
+    x, _ = GaussQuadrature.legendre(N, GaussQuadrature.both)
+    return vandermonde(x, N-1)
+end
+
+function legendre_transform_forward_matrix(N)
+    return legendre_transform_inverse_matrix(N) \ I 
 end
 
 # Base extensions

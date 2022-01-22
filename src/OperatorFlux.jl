@@ -3,6 +3,7 @@ module OperatorFlux
 using Flux
 using FFTW
 using GaussQuadrature
+using LinearAlgebra
 using Tullio
 using ChainRulesCore
 
@@ -61,6 +62,7 @@ pad_modes(trafo::AbstractTransform, _...) =
 include("utils.jl")
 include("fourier.jl")
 include("chebyshev.jl")
+include("legendre.jl")
 include("operators.jl")
 
 end # module
