@@ -1,7 +1,7 @@
 status = [
-  "test-os (ubuntu-latest)",
-  "test-os (windows-latest)",
-  "test-os (macos-latest)",
+  "ci 1.7.0 - ubuntu-latest",
+  "ci 1.7.0 - windows-latest",
+  "ci 1.7.0 - macOS-latest",
   "format",
   "docbuild"
 ]
