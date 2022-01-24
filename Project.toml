@@ -1,6 +1,6 @@
 name = "OperatorFlux"
 uuid = "47cfafe2-3833-4da3-8183-ce14c2b92cbd"
-authors = ["bischtob <tobias.bischoff@pm.me> and sandreza <andrenogueirasouza@gmail.com>"]
+authors = ["CliMA Contributors <clima-software@caltech.edu>"]
 version = "0.1.0"
 
 [deps]
@@ -15,7 +15,6 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
 [compat]
-Tullio = "0.3"
 julia = "1.7"
 
 [extras]
