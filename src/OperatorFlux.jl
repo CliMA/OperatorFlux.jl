@@ -5,8 +5,7 @@ using FFTW
 using Tullio
 using ChainRulesCore
 
-export
-    FourierTransform,
+export FourierTransform,
     Chebyshev,
     SpectralConv,
     SpectralKernelOperator,

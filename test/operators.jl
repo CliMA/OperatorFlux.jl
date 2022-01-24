@@ -10,7 +10,7 @@
 
     # test convolution
     a, b = -π, π
-    x = (b - a) .* collect(0:(M-1)) / M .+ a
+    x = (b - a) .* collect(0:(M - 1)) / M .+ a
     y = copy(x)
     z = sin.(x) * sin.(y)'
     z = z[:, :, :, :] # emulate channels and batches
