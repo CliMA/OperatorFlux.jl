@@ -10,6 +10,3 @@ using ChainRulesTestUtils
 include("fourier.jl")
 include("chebyshev.jl")
 include("operators.jl")
-
-
-

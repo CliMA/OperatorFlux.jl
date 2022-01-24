@@ -15,13 +15,13 @@ julia> Chebyshev(modes = (12, 3, 4, 12))
 # \int_{-1}^1 T_m(x) / sqrt(1-x^2) f(x) dx for each m
 # change of variable x = cos\theta
 # \int_0^\pi cos(m \theta) f(cos \theta) d\theta
-struct Chebyshev{N,T,D} <: AbstractTransform
-    modes::NTuple{N,T}
+struct Chebyshev{N, T, D} <: AbstractTransform
+    modes::NTuple{N, T}
     dims::D
 end
 
-function Chebyshev(; modes::NTuple{N,T}) where {N,T}
-    return Chebyshev(modes, 2:N+1)
+function Chebyshev(; modes::NTuple{N, T}) where {N, T}
+    return Chebyshev(modes, 2:(N + 1))
 end
 
 function forward(tr::Chebyshev{N}, x) where {N}
@@ -31,7 +31,11 @@ end
 
 function inverse(tr::Chebyshev{N}, x) where {N}
     # x -> [in_channels, dims(x), batch_size]
-    return FFTW.r2r(x ./ (prod(2 .* (size(x)[tr.dims] .- 1))), FFTW.REDFT00, tr.dims)
+    return FFTW.r2r(
+        x ./ (prod(2 .* (size(x)[tr.dims] .- 1))),
+        FFTW.REDFT00,
+        tr.dims,
+    )
 end
 
 function truncate_modes(tr::Chebyshev{N}, c) where {N}
@@ -62,7 +66,7 @@ function pad_modes(::Chebyshev{N}, c, size_pad::NTuple) where {N}
     # [0, 1, 2, 3] -> [0, 1, 2, 3, 4, 5]
     # [a, b, c, d] -> [a, b, c, d, 0, 0]
     c_padded = zeros(eltype(c), (size(c)[1], size_pad..., size(c)[end]))
-    inds = [collect(1:m) for m in size(c)[2:end-1]]
+    inds = [collect(1:m) for m in size(c)[2:(end - 1)]]
     c_padded_view = OperatorFlux.mview(c_padded, inds, Val(N))
     c_padded_view .= c
 
@@ -75,17 +79,14 @@ Base.eltype(::Chebyshev) = Float32
 Base.size(tr::Chebyshev) = [tr.modes...]
 
 function Base.show(io::IO, ft::Chebyshev)
-    print(
-        io,
-        "Chebyshev(modes = $(ft.modes)"
-    )
+    print(io, "Chebyshev(modes = $(ft.modes)")
 end
 
 function ChainRulesCore.rrule(::typeof(r2r), x::AbstractArray, kind, dims)
 
-    (M,) = size(x)[2:end-1]
+    (M,) = size(x)[2:(end - 1)]
     a1 = ones(M)
-    a2 = [(-1)^i for i = 1:M]
+    a2 = [(-1)^i for i in 1:M]
     a2[1] = a2[end] = 0.0
     a1[1] = a1[end] = 0.0
     e1 = zeros(M)
@@ -96,8 +97,10 @@ function ChainRulesCore.rrule(::typeof(r2r), x::AbstractArray, kind, dims)
     function r2r_pullback(y)
         # r2r pullback turns out to be r2r + a rank 4 correction
         w = r2r(y, kind, dims)
-        @tullio w[s, i, b] += a1[i] * e1[k] * y[s, k, b] - a2[i] * eN[k] * y[s, k, b]
-        @tullio w[s, i, b] += eN[i] * a2[k] * y[s, k, b] - e1[i] * a1[k] * y[s, k, b]
+        @tullio w[s, i, b] +=
+            a1[i] * e1[k] * y[s, k, b] - a2[i] * eN[k] * y[s, k, b]
+        @tullio w[s, i, b] +=
+            eN[i] * a2[k] * y[s, k, b] - e1[i] * a1[k] * y[s, k, b]
         return NoTangent(), w, NoTangent(), NoTangent()
     end
 
