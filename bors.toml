@@ -1,0 +1,11 @@
+status = [
+  "test-os (ubuntu-latest)",
+  "test-os (windows-latest)",
+  "test-os (macos-latest)",
+  "format",
+  "docbuild"
+]
+delete_merged_branches = true
+timeout_sec = 12600
+block_labels = [ "do-not-merge-yet" ]
+cut_body_after = "<!--"
