@@ -28,3 +28,6 @@ $ git clone https://github.com/CliMA/OperatorFlux.jl.git
 ## Contributing
 
 If you're interested in contributing to the development of OperatorFlux.jl we want your help no matter how big or small a contribution you make! It's always great to have new people look at the code with fresh eyes: you will see errors that other developers have missed.
+
+## Related Packages
+[NeuralOperators.jl](https://github.com/foldfelis/NeuralOperators.jl) - is similar in scope when it comes to spectral transforms. Check it out!
