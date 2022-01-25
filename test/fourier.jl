@@ -3,7 +3,6 @@ using Test
 using FFTW
 using Flux
 using LinearAlgebra
-using Revise
 using ChainRulesCore
 using ChainRulesTestUtils
 
