@@ -3,6 +3,7 @@ module OperatorFlux
 using Flux
 using FFTW
 using GaussQuadrature
+using LinearAlgebra
 using Tullio
 using ChainRulesCore
 
@@ -10,6 +11,7 @@ import FFTW: r2r
 
 export FourierTransform,
     ChebyshevTransform,
+    SpectralElementTransform,
     SpectralConv,
     SpectralKernelOperator,
     SpectralCovariance,
@@ -69,6 +71,7 @@ include("utils.jl")
 include("chainrules.jl")
 include("transform_fourier.jl")
 include("transform_chebyshev.jl")
+include("legendre.jl")
 include("operators.jl")
 
 end # module
