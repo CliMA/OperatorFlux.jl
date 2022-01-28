@@ -15,9 +15,14 @@ using LinearAlgebra
 
     # test forward & inverse
     trafo = ChebyshevTransform(modes = (16, 16))
-    z = rand(5, M, M, 4)
-    @test size(OperatorFlux.forward(trafo, z)) == (5, M, M, 4)
+    z = rand(5, M, 18, 4)
+    @test size(OperatorFlux.forward(trafo, z)) == (5, M, 18, 4)
     @test norm(OperatorFlux.inverse(trafo, forward(trafo, z)) - z) ≤
+          4 * eps(norm(z))
+    @test norm(OperatorFlux.inverse(trafo, forward(trafo, z, 2:2), 2:2) - z) ≤
+          4 * eps(norm(z))
+    OperatorFlux.inverse(trafo, forward(trafo, z, (3,)), (3,))
+    @test norm(OperatorFlux.inverse(trafo, forward(trafo, z, (3,)), (3,)) - z) ≤
           3 * eps(norm(z))
 
     # test truncate_modes

@@ -1,11 +1,6 @@
-using OperatorFlux
-using Test
-using FFTW
-using Flux
-using LinearAlgebra
-using ChainRulesCore
-using ChainRulesTestUtils
-
-include("fourier.jl")
-include("chebyshev.jl")
-include("operators.jl")
+include("chainrules.jl")
+include("transform_fourier.jl")
+include("transform_chebyshev.jl")
+include("operators_convolution.jl")
+include("operators_covariance.jl")
+include("operators_spectralkernel.jl")
