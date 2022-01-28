@@ -36,7 +36,7 @@ function getdata(args, device)
 end
 
 function build_model(; nclasses = 10)
-    trafo = Chebyshev(modes = (64,))
+    trafo = ChebyshevTransform(modes = (64,))
     return Chain(
         SpectralKernelOperator(trafo, 1 => 1, gelu),
         SpectralKernelOperator(trafo, 1 => 1, gelu),

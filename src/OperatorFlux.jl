@@ -5,8 +5,10 @@ using FFTW
 using Tullio
 using ChainRulesCore
 
+import FFTW: r2r
+
 export FourierTransform,
-    Chebyshev,
+    ChebyshevTransform,
     SpectralConv,
     SpectralKernelOperator,
     forward,
@@ -57,6 +59,7 @@ pad_modes(trafo::AbstractTransform, _...) =
     error("pad_modes not implemented for given trafo")
 
 include("utils.jl")
+include("chainrules.jl")
 include("fourier.jl")
 include("chebyshev.jl")
 include("operators.jl")

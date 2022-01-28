@@ -1,36 +1,35 @@
-import FFTW: r2r
+struct ChebyshevTransform{N, T, D} <: AbstractTransform
+    modes::NTuple{N, T}
+    dims::D
+end
 
 """
-    Chebyshev(; modes)
+    ChebyshevTransform(; modes)
 
-Constructs a discrete Chebyshev transform with modes `modes` on the dimensions of the data
-`dims` by using .
-
+Constructs a discrete Chebyshev transform transform with modes `modes` that 
+operates on the 2nd, 3rd, ...N-modes+1-st dimension of the data.
+Input must be have even-numbered size.
 # Example
 ```
-julia> Chebyshev(modes = (12, 3, 4, 12))
+julia> ChebyshevTransform(modes = (12, 3, 4, 12))
 ```
 """
 # FFTW.REDFT00 = 2N-1 - Chebyshev
 # \int_{-1}^1 T_m(x) / sqrt(1-x^2) f(x) dx for each m
 # change of variable x = cos\theta
 # \int_0^\pi cos(m \theta) f(cos \theta) d\theta
-struct Chebyshev{N, T, D} <: AbstractTransform
-    modes::NTuple{N, T}
-    dims::D
+function ChebyshevTransform(; modes::NTuple{N, T}) where {N, T}
+    # assumes transform is over first consecutive space-like
+    # dimensions, aka 2:N+1. Input must be even-sized.
+    dims = 2:(length(modes) + 1)
+    return ChebyshevTransform(modes, dims)
 end
 
-function Chebyshev(; modes::NTuple{N, T}) where {N, T}
-    return Chebyshev(modes, 2:(N + 1))
-end
-
-function forward(tr::Chebyshev{N}, x) where {N}
-    # x -> [in_channels, dims(x), batch_size]
+function forward(tr::ChebyshevTransform{N}, x) where {N}
     return FFTW.r2r(x, FFTW.REDFT00, tr.dims)
 end
 
-function inverse(tr::Chebyshev{N}, x) where {N}
-    # x -> [in_channels, dims(x), batch_size]
+function inverse(tr::ChebyshevTransform{N}, x) where {N}
     return FFTW.r2r(
         x ./ (prod(2 .* (size(x)[tr.dims] .- 1))),
         FFTW.REDFT00,
@@ -38,71 +37,69 @@ function inverse(tr::Chebyshev{N}, x) where {N}
     )
 end
 
-function truncate_modes(tr::Chebyshev{N}, c) where {N}
-    # c -> [in_channels, size_c..., batch_size]
-    # Returns a low-pass filtered version of c assuming
-    # that c is a tensor of spectral weights.
+function truncate_modes(
+    tr::ChebyshevTransform{N},
+    coeff,
+    dims = tr.dims,
+) where {N}
+    # Returns a low-pass filtered version of coeff assuming
+    # that coeff is a tensor of spectral weights.
     # Want to keep 1:M+1 to end-M+2:end using FFTW convention
     #
     # Ex.: tr.modes = (3,)
     # TODO! Be consistent with truncation conventions.
     # [0, 1, 2, 3, 4, 5] -> [0, 1, 2]
     # [a, b, c, d, e, f] -> [a, b, c]
-    inds = [collect(1:m) for m in tr.modes]
-    c_truncated = OperatorFlux.mview(c, inds, Val(N))
+    # calculate the retained modes taking into account the dimensions
+    # that the spectral transform operates over
+    size_space = size(coeff)[2:(end - 1)] # sizes of space-like dimensions of coeff
+    inds_space = 2:(length(size_space) + 1) # indices of space-like dimensions of coeff
+    inds_map = Dict(zip(dims, tr.modes)) # maps index location to retained modes
+    inds_offset = 1
 
-    return c_truncated
+    # we only truncate along dimensions contained in dims and otherwise keep
+    # all modes
+    modes = [
+        i ∈ dims ? inds_map[i] : size_space[i - inds_offset]
+        for i in inds_space
+    ]
+
+    # indices for the spectral coefficients that we need to retain
+    inds = [collect(1:m) for (s, m) in zip(size(coeff)[2:(end - 1)], modes)]
+
+    coeff_truncated = OperatorFlux.mview(coeff, inds, Val(length(size_space)))
+
+    return coeff_truncated
 end
 
-function pad_modes(::Chebyshev{N}, c, size_pad::NTuple) where {N}
-    # c -> [in_channels, size_c..., batch_size]
-    # c_padded -> [in_channels, size_pad..., batch_size]
-    # Returns a padded-with-zeros version of c assuming
-    # that c is a tensor of spectral weights, thereby inflating c.
-    # Want to keep 1:M+1 to end-M+2:end using FFTW convention, so need to 
-    # fill rest with zeros.
-    #
-    # Ex.: dims = (6,)
-    # [0, 1, 2, 3] -> [0, 1, 2, 3, 4, 5]
-    # [a, b, c, d] -> [a, b, c, d, 0, 0]
-    c_padded = zeros(eltype(c), (size(c)[1], size_pad..., size(c)[end]))
-    inds = [collect(1:m) for m in size(c)[2:(end - 1)]]
-    c_padded_view = OperatorFlux.mview(c_padded, inds, Val(N))
-    c_padded_view .= c
+function pad_modes(
+    tr::ChebyshevTransform,
+    coeff,
+    size_pad::NTuple,
+    dims = tr.dims,
+)
+    # return a padded-with-zeros version of coeff assuming
+    # that coeff is a tensor of spectral weights, thereby inflating coeff.
+    N = length(size_pad) # number of space-like dimensions
+    size_space = size(coeff)[2:(end - 1)] # sizes of space-like dimensions of coeff
 
-    return c_padded
+    # generate a zero array and indices that point to the filled-in
+    # locations
+    coeff_padded =
+        zeros(eltype(coeff), (size(coeff)[1], size_pad..., size(coeff)[end]))
+    inds = [collect(1:m) for (s, m) in zip(size_pad, size(coeff)[2:(end - 1)])]
+
+    coeff_padded_view = OperatorFlux.mview(coeff_padded, inds, Val(N))
+    coeff_padded_view .= coeff
+
+    return coeff_padded
 end
 
 # Base extensions
-Base.ndims(::Chebyshev{N}) where {N} = N
-Base.eltype(::Chebyshev) = Float32
-Base.size(tr::Chebyshev) = [tr.modes...]
+Base.ndims(::ChebyshevTransform{N}) where {N} = N
+Base.eltype(::ChebyshevTransform) = Float32
+Base.size(tr::ChebyshevTransform) = [tr.modes...]
 
-function Base.show(io::IO, ft::Chebyshev)
-    print(io, "Chebyshev(modes = $(ft.modes)")
-end
-
-function ChainRulesCore.rrule(::typeof(r2r), x::AbstractArray, kind, dims)
-
-    (M,) = size(x)[2:(end - 1)]
-    a1 = ones(M)
-    a2 = [(-1)^i for i in 1:M]
-    a2[1] = a2[end] = 0.0
-    a1[1] = a1[end] = 0.0
-    e1 = zeros(M)
-    e1[1] = 1.0
-    eN = zeros(M)
-    eN[end] = 1.0
-
-    function r2r_pullback(y)
-        # r2r pullback turns out to be r2r + a rank 4 correction
-        w = r2r(y, kind, dims)
-        @tullio w[s, i, b] +=
-            a1[i] * e1[k] * y[s, k, b] - a2[i] * eN[k] * y[s, k, b]
-        @tullio w[s, i, b] +=
-            eN[i] * a2[k] * y[s, k, b] - e1[i] * a1[k] * y[s, k, b]
-        return NoTangent(), w, NoTangent(), NoTangent()
-    end
-
-    return r2r(x, kind, dims), r2r_pullback
+function Base.show(io::IO, tr::ChebyshevTransform)
+    print(io, "ChebyshevTransform(modes = $(tr.modes), dims = $(tr.dims))")
 end
