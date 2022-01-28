@@ -50,10 +50,10 @@ function (conv::SpectralConv)(x::AbstractArray)
     # TODO: (1) perhaps dispatch directly instead of calling ndims(conv)
     #       (2) perhaps something to infer size(x) at compile time
     c = OperatorFlux.forward(conv.transform, x)
-    c = OperatorFlux.truncate_modes(conv.transform, c)
-    wc = OperatorFlux.tensor_contraction(conv.weights, c, Val(ndims(conv)))
-    wc = OperatorFlux.pad_modes(conv.transform, wc, size(x)[2:(end - 1)])
-    y = OperatorFlux.inverse(conv.transform, wc)
+    ct = OperatorFlux.truncate_modes(conv.transform, c)
+    wc = OperatorFlux.tensor_contraction(conv.weights, ct, Val(ndims(conv)))
+    wcp = OperatorFlux.pad_modes(conv.transform, wc, size(c)[2:(end - 1)])
+    y = OperatorFlux.inverse(conv.transform, wcp)
 
     return y
 end
