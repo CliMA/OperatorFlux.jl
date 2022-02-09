@@ -28,7 +28,8 @@ function getdata(args, device)
     ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
 
     # Create DataLoaders (mini-batch iterators)
-    train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
+    train_loader =
+        DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
     test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
 
     return train_loader, test_loader
@@ -40,7 +41,7 @@ function build_model(; nclasses = 10)
         SpectralKernelOperator(trafo, 1 => 1, gelu),
         SpectralKernelOperator(trafo, 1 => 1, gelu),
         flatten,
-        Dense(784, nclasses)
+        Dense(784, nclasses),
     )
 end
 
@@ -89,7 +90,7 @@ function train(; kws...)
     opt = ADAM(args.η)
 
     ## Training
-    for epoch = 1:args.epochs
+    for epoch in 1:(args.epochs)
         for (x, y) in train_loader
             x, y = device(x), device(y) # transfer data to device
             gs = gradient(() -> logitcrossentropy(model(x), y), ps) # compute gradient

@@ -21,8 +21,23 @@ import OperatorFlux: legendre_transform_forward_matrix, legendre_transform_inver
     polynomials = [P₀, P₁, P₂, P₃, P₄, P₅]
 
     # test constructors
+    for mode in [(4,), (4, 5), (4, 5, 6)]
+        trafo = SpectralElementTransform(modes = mode)
+        @test trafo.jacobian_det === nothing
+        @test trafo.jacobian === nothing
+        @test length(trafo.forward) == length(mode)
+        @test length(trafo.inverse) == length(mode)
+    end
 
     # test forward & inverse
+    for mode in [(5,), (5, 6), (5, 7, 9)]
+        z = rand(3, mode..., 10, 5)
+        trafo = SpectralElementTransform(modes = mode)
+
+        @test norm(OperatorFlux.inverse(trafo, OperatorFlux.forward(trafo, z)) - z) ≤
+              20 * eps(norm(z))
+
+    end
 
     # test truncate_modes
 
@@ -37,10 +52,10 @@ import OperatorFlux: legendre_transform_forward_matrix, legendre_transform_inver
         inv_transform = legendre_transform_inverse_matrix(n)
         transform = inv(inv_transform)
         @test all(transform .== legendre_transform_forward_matrix(n))
-    
+
         for (i, p) in enumerate(polynomials)
-            @test (transform*p.(x))[i] - 1 ≤ eps(10*norm(p.(x)))
-            @test norm(transform * p.(x)) - 1 ≤ eps(10*norm(p.(x)))
+            @test (transform*p.(x))[i] - 1 ≤ eps(10 * norm(p.(x)))
+            @test norm(transform * p.(x)) - 1 ≤ eps(10 * norm(p.(x)))
         end
         for (i, p) in enumerate(polynomials)
             @test norm(inv_transform * transform * p.(x) - p.(x)) ≤ eps(10 * norm(p.(x)))
@@ -53,9 +68,3 @@ import OperatorFlux: legendre_transform_forward_matrix, legendre_transform_inver
     # @test eltype(trafo) == Float32
     # @test size(trafo) == 
 end
-
-#=
-LTM = legendretransformmatrix 
-
-@tullio q[s, i, j, k, e, b] := LTM[i,ii] * LTM[j, jj] * LTM[k, kk] * q[s, ii, jj, kk, e, b]
-=#
