@@ -71,7 +71,7 @@ include("utils.jl")
 include("chainrules.jl")
 include("transform_fourier.jl")
 include("transform_chebyshev.jl")
-include("legendre.jl")
+include("transform_spec_elem.jl")
 include("operators.jl")
 
 end # module

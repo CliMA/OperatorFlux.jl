@@ -2,6 +2,10 @@ mview(c, inds, ::Val{1}) = view(c, :, inds[1], :)
 mview(c, inds, ::Val{2}) = view(c, :, inds[1], inds[2], :)
 mview(c, inds, ::Val{3}) = view(c, :, inds[1], inds[2], inds[3], :)
 mview(c, inds, ::Val{4}) = view(c, :, inds[1], inds[2], inds[3], inds[4], :)
+mview(c, inds, ::Val{1}, elem = true) = view(c, :, inds[1], :, :)
+mview(c, inds, ::Val{2}, elem = true) = view(c, :, inds[1], inds[2], :, :)
+mview(c, inds, ::Val{3}, elem = true) = view(c, :, inds[1], inds[2], inds[3], :, :)
+mview(c, inds, ::Val{4}, elem = true) = view(c, :, inds[1], inds[2], inds[3], inds[4], :, :)
 
 tensor_contraction(
     A,

@@ -81,7 +81,6 @@ function pad_modes(
     # return a padded-with-zeros version of coeff assuming
     # that coeff is a tensor of spectral weights, thereby inflating coeff.
     N = length(size_pad) # number of space-like dimensions
-    size_space = size(coeff)[2:(end - 1)] # sizes of space-like dimensions of coeff
 
     # generate a zero array and indices that point to the filled-in
     # locations
