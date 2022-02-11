@@ -30,14 +30,15 @@ function SpectralConv(
 
     # depending on the transform, the size of the coefficient
     # matrix may be different
-    dims = size(transform)
+    space_dims = size(transform)
 
     # depending on the transform, we may need to initialize
     # with real or complex numbers
     if FT <: Complex
-        weights = init(in, dims..., out) + init(in, dims..., out) * im
+        weights =
+            init(in, space_dims..., out) + init(in, space_dims..., out) * im
     else
-        weights = init(in, dims..., out)
+        weights = init(in, space_dims..., out)
     end
     weights = scale * weights
 
@@ -119,8 +120,6 @@ end
 Flux.@functor SpectralCovariance
 
 function (so::SpectralCovariance)(x::AbstractArray)
-    in_channels = so.in_channels
-    out_channels = so.out_channels
     N_space = length(size(x)[2:(end - 1)])
 
     # Bring input into truncated spectral representation
@@ -128,21 +127,29 @@ function (so::SpectralCovariance)(x::AbstractArray)
     ct = OperatorFlux.truncate_modes(so.transform, c)
 
     # paramterize the mean for the low-rank approximation
-    μ = OperatorFlux.sparse_mean(so.weights_μ, c, Val(N_space))
+    μ = OperatorFlux.sparse_mean(so.weights_μ, ct, Val(N_space))
     μ = OperatorFlux.pad_modes(so.transform, μ, size(c)[2:(end - 1)])
     μ = OperatorFlux.inverse(so.transform, μ)
 
     # parameterize the diagonal matrix for the low-rank approximation
-    D = OperatorFlux.sparse_mean(so.weights_d, c, Val(N_space))
+    D = OperatorFlux.sparse_mean(so.weights_d, ct, Val(N_space))
     D = OperatorFlux.pad_modes(so.transform, D, size(c)[2:(end - 1)])
     D = OperatorFlux.inverse(so.transform, D)
     D = @. log(1 + exp(D)) # keeping a stable positive attitude
 
     # parameterize the low-rank matrix for the low-rank approximation
     rank = size(so.weights_w)[end - 1]
-    V = OperatorFlux.sparse_covariance(so.weights_w, c, Val(N_space))
+    V = OperatorFlux.sparse_covariance(so.weights_w, ct, Val(N_space))
     V = OperatorFlux.pad_modes(so.transform, V, (size(c)[2:(end - 1)]..., rank))
+    # we need to bring the array into a shape that is compatible with the 
+    # transform API
+    store_v_size = size(V)
+    V = reshape(
+        V,
+        (store_v_size[1:(end - 2)]..., prod(store_v_size[(end - 1):end]))...,
+    )
     V = OperatorFlux.inverse(so.transform, V)
+    V = reshape(V, (size(V)[1:(end - 1)]..., store_v_size[(end - 1):end]...)...)
 
     return μ, D, V
 end
