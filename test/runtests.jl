@@ -1,6 +1,7 @@
 include("chainrules.jl")
 include("transform_fourier.jl")
 include("transform_chebyshev.jl")
+include("transform_legendre.jl")
 include("operators_convolution.jl")
 include("operators_covariance.jl")
 include("operators_spectralkernel.jl")

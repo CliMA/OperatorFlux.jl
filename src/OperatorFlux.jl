@@ -4,11 +4,14 @@ using Flux
 using FFTW
 using Tullio
 using ChainRulesCore
+using GaussQuadrature
+using LinearAlgebra
 
 import FFTW: r2r
 
 export FourierTransform,
     ChebyshevTransform,
+    LegendreTransform,
     SpectralConv,
     SpectralKernelOperator,
     SpectralCovariance,
@@ -65,9 +68,10 @@ pad_modes(trafo::AbstractTransform, _...) =
     error("pad_modes not implemented for given trafo")
 
 include("utils.jl")
-include("chainrules.jl")
 include("transform_fourier.jl")
 include("transform_chebyshev.jl")
+include("transform_legendre.jl")
+include("chainrules.jl")
 include("operators.jl")
 
 end # module

@@ -59,7 +59,6 @@ function loss_and_accuracy(data_loader, model, device)
     return ls / num, acc / num
 end
 
-
 @kwdef mutable struct Args
     η::Float64 = 3e-4       # learning rate
     batchsize::Int = 256    # batch size
