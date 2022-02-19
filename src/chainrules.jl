@@ -27,17 +27,15 @@ function ChainRulesCore.rrule(
     ::typeof(truncate_modes),
     tr::AbstractTransform,
     c::AbstractArray,
-    dims,
 )
     function truncate_modes_pullback(x)
         # truncate_modes pullback turns out to be pad_modes
         return NoTangent(),
         NoTangent(),
-        @thunk(pad_modes(tr, x, size(c)[2:(end - 1)])),
-        NoTangent()
+        @thunk(pad_modes(tr, x, size(c)[2:(end - 1)]))
     end
 
-    return truncate_modes(tr, c, dims), truncate_modes_pullback
+    return truncate_modes(tr, c), truncate_modes_pullback
 end
 
 function ChainRulesCore.rrule(
@@ -45,17 +43,15 @@ function ChainRulesCore.rrule(
     tr::AbstractTransform,
     c::AbstractArray,
     size_pad::NTuple,
-    dims,
 )
     function pad_modes_pullback(x)
         # pad_modes pullback turns out to be truncate_modes
 
         return NoTangent(),
         NoTangent(),
-        @thunk(truncate_modes(tr, x, dims)),
-        NoTangent(),
+        @thunk(truncate_modes(tr, x)),
         NoTangent()
     end
 
-    return pad_modes(tr, c, size_pad, dims), pad_modes_pullback
+    return pad_modes(tr, c, size_pad), pad_modes_pullback
 end
