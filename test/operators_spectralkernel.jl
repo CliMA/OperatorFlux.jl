@@ -27,12 +27,12 @@ using LinearAlgebra
         SpectralKernelOperator(trafo, 32 => 32),
         Dense(32, 128),
     )
-    params_before = deepcopy(params(model))
+    params_before = deepcopy(Flux.params(model))
     loss(x, y) = Flux.mse(model(x), y)
     x = rand(Float32, 1, 1024, 5)
     data = [(x, rand(Float32, 128, 1024, 5))]
-    Flux.train!(loss, params(model), data, Flux.ADAM())
-    params_after = deepcopy(params(model))
+    Flux.train!(loss, Flux.params(model), data, Flux.ADAM())
+    params_after = deepcopy(Flux.params(model))
     # test that something actually happened during 
     # optimization with Flux.
     for i in 1:length(params_before)
@@ -63,12 +63,12 @@ end
         SpectralKernelOperator(trafo, 32 => 32),
         Dense(32, 128),
     )
-    params_before = deepcopy(params(model))
+    params_before = deepcopy(Flux.params(model))
     loss(x, y) = Flux.mse(model(x), y)
     x = rand(Float32, 1, 1024, 5)
     data = [(x, rand(Float32, 128, 1024, 5))]
-    Flux.train!(loss, params(model), data, Flux.ADAM())
-    params_after = deepcopy(params(model))
+    Flux.train!(loss, Flux.params(model), data, Flux.ADAM())
+    params_after = deepcopy(Flux.params(model))
     # test that something actually happened during 
     # optimization with Flux.
     for i in 1:length(params_before)
@@ -100,12 +100,12 @@ end
     #     SpectralKernelOperator(trafo, 32 => 32),
     #     Dense(32, 128),
     # )
-    # params_before = deepcopy(params(model))
+    # params_before = deepcopy(Flux.params(model))
     # loss(x, y) = Flux.mse(model(x), y)
     # x = rand(Float32, 1, 8, 10, 5)
     # data = [(x, rand(Float32, 128, 8, 10, 5))]
-    # Flux.train!(loss, params(model), data, Flux.ADAM())
-    # params_after = deepcopy(params(model))
+    # Flux.train!(loss, Flux.params(model), data, Flux.ADAM())
+    # params_after = deepcopy(Flux.params(model))
     # # test that something actually happened during 
     # # optimization with Flux.
     # for i in 1:length(params_before)
