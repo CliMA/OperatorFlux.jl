@@ -42,8 +42,8 @@ using LinearAlgebra
     trafo = FourierTransform(modes = (12, 5))
     c = rand(27, 16, 14, 1)
     inds = [
-        [(1:(div(m, 2) + 1))..., ((s - div(m, 2) + 2):s)...]
-        for (s, m) in zip((M, 14), size(c)[2:(end - 1)])
+        [(1:(div(m, 2) + 1))..., ((s - div(m, 2) + 2):s)...] for
+        (s, m) in zip((M, 14), size(c)[2:(end - 1)])
     ]
     inds[1] = collect(1:16)
     @test all(OperatorFlux.pad_modes(trafo, c, (32, 14))[:, inds..., :] .== c)
