@@ -36,8 +36,8 @@ function truncate_modes(tr::FourierTransform{N}, coeff) where {N}
 
     # indices for the spectral coefficients that we need to retain
     inds = [
-        vcat(collect(1:(m)), collect((s - m + 1):s))
-        for (s, m) in zip(size(coeff)[2:(end - 1)], tr.modes)
+        vcat(collect(1:(m)), collect((s - m + 1):s)) for
+        (s, m) in zip(size(coeff)[2:(end - 1)], tr.modes)
     ]
 
     # we need to handle the first dimension of the real Fourier transform
@@ -63,8 +63,8 @@ function pad_modes(
     size_padded = (size(coeff)[1], size_pad..., size(coeff)[end])
     coeff_padded = zeros(eltype(coeff), size_padded)
     inds = [
-        vcat(collect(1:(div(m, 2) + 1)), collect((s - div(m, 2) + 2):s))
-        for (s, m) in zip(size_pad, size(coeff)[2:(end - 1)])
+        vcat(collect(1:(div(m, 2) + 1)), collect((s - div(m, 2) + 2):s)) for
+        (s, m) in zip(size_pad, size(coeff)[2:(end - 1)])
     ]
 
     # we need to handle the first dimension of the real Fourier transform
