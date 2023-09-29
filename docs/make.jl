@@ -8,6 +8,7 @@ makedocs(
     modules = [OperatorFlux],
     sitename = "OperatorFlux.jl",
     authors = "CliMA",
+    warnonly = true,
     format = Documenter.HTML(
         prettyurls = !isempty(get(ENV, "CI", "")),
         collapselevel = 1,
